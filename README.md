@@ -4,4 +4,4 @@ Example of implementation one of the most popular standard for smart contracts o
 
 Key features:
 - interchangeability (each token has the same value);
-- divisibility (i.e. you can have, for example, half a coin of one or 0.0456 parts).
+- divisibility (you can have, for example, half a coin of one or 0.0456 parts).
