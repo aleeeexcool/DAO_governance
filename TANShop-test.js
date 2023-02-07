@@ -1,8 +1,8 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
-const tokenJSON = require("../artifacts/contracts/Erc.sol/MCSToken.json")
+const tokenJSON = require("../artifacts/contracts/ERC20.sol/TANToken.json")
 
-describe("MShop", function () {
+describe("TANShop", function () {
     let owner
     let buyer
     let shop
@@ -11,7 +11,7 @@ describe("MShop", function () {
     beforeEach(async function() {
         [owner, buyer] = await ethers.getSigners()
 
-        const MShop = await ethers.getContractFactory("MShop", owner)
+        const MShop = await ethers.getContractFactory("TANShop", owner)
         shop = await MShop.deploy()
         await shop.deployed()
 
