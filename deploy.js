@@ -4,7 +4,7 @@ const ethers = hre.ethers
 async function main() {
     const [signer] = await ethers.getSigners()
 
-    const Erc = await ethers.getContractFactory('MShop', signer)
+    const Erc = await ethers.getContractFactory('TANShop', signer)
     const erc = await Erc.deploy()
     await erc.deployed()
     console.log(erc.address)
