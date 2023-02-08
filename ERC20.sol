@@ -107,7 +107,6 @@ contract TANShop {
     constructor() {
         token = new TANToken(address(this));
         owner = payable(msg.sender);
-
     }
 
     modifier onlyOwner() {
@@ -144,5 +143,9 @@ contract TANShop {
 
     function tokenBalance() public view returns(uint) {
         return token.balanceOf(address(this));
+    }
+    
+    function withdraw(uint _amount) external onlyOwner {
+        payable(msg.sender).transfer(_amount);
     }
 }
