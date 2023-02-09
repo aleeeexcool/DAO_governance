@@ -11,8 +11,8 @@ describe("TANShop", function () {
     beforeEach(async function() {
         [owner, buyer] = await ethers.getSigners()
 
-        const MShop = await ethers.getContractFactory("TANShop", owner)
-        shop = await MShop.deploy()
+        const Factory = await ethers.getContractFactory("TANShop", owner)
+        shop = await Factory.deploy()
         await shop.deployed()
 
         erc20 = new ethers.Contract(await shop.token(), tokenJSON.abi, owner)
