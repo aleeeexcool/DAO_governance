@@ -2,15 +2,16 @@
 pragma solidity 0.8.17;
 
 import "./DigitalVendingMachine.sol";
+import "./ERC20.sol";
 
-contract DAO {
+contract DAO is ERC20, TANToken {
     address payable public VendingMachineAddress;
     
     uint public voteEndTime;
     
     uint public DAObalance;
     
-    mapping(address=>uint) balances;
+    mapping(address => uint) balances;
     
     uint public decision;
 
@@ -65,7 +66,7 @@ contract DAO {
         }
         require(DAObalance <= 1 ether, "1 Ether balance has been reached");
         
-        balances[msg.sender]+=msg.value;
+        _[msg.sender]+=msg.value;
     }
 
     function giveRightToVote(address voter) public {
@@ -107,9 +108,9 @@ contract DAO {
     }
 
     function withdraw(uint amount) public {
-        require(balances[msg.sender] >= amount, "amount > balance");
+        require(_[msg.sender] >= amount, "amount > balance");
 
-        balances[msg.sender]-= amount;
+        _[msg.sender]-= amount;
         payable(msg.sender).transfer(amount);
 
         DAObalance = address(this).balance;
@@ -143,6 +144,6 @@ contract DAO {
 
     function checkCupCakeBalance() public view returns (uint) {
         VendingMachine vendingMachine = VendingMachine(VendingMachineAddress);
-        return vendingMachine.cupcakeBalances(address(this));
+        return vendingMachine.cupcake_(address(this));
     }
 }
