@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.0;
 
 import "./IERC20.sol";
@@ -95,7 +94,7 @@ contract ERC20 is IERC20 {
 }
 
 contract TANToken is ERC20 {
-    constructor(address shop) ERC20("TANToken", "TAN", 100, shop) {}
+    constructor(address shop) ERC20("TANToken", "TAN", 1000000, shop) {}
 }
 
 contract TANShop {

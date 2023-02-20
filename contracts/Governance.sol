@@ -1,151 +1,148 @@
 // SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
 
-pragma solidity ^0.8.0;
+import "./DigitalVendingMachine.sol";
 
-import "./ERC20.sol";
+contract DAO {
+    address payable public VendingMachineAddress;
+    
+    uint public voteEndTime;
+    
+    uint public DAObalance;
+    
+    mapping(address=>uint) balances;
+    
+    uint public decision;
 
-contract Governance {
-    struct ProposalVote {
-        uint againstVotes;
-        uint forVotes;
-        uint abstainVotes;
-        mapping(address => bool) hasVoted;
+    bool public ended;
+    
+    struct Voter {
+        uint weight;
+        bool voted;
+        address delegate;
+        uint vote;
     }
 
     struct Proposal {
-        uint votingStarts;
-        uint votingEnds;
-        bool executed;
+        string name;
+        uint voteCount;
     }
 
-    enum ProposalState { Pending, Active, Succeeded, Defeated,  Executed}
+    address public chairperson;
 
-    mapping(bytes32 => Proposal) public proposals;
-    mapping(bytes32 => ProposalVote) public proposalVotes;
+    mapping(address => Voter) public voters;
+    Proposal[] public proposals;
 
-    TANToken public token;
+    error voteAlreadyEnded();
+    error voteNotYetEnded();
 
-    uint public constant VOTING_DELAY = 10;
-    uint public constant VOTING_DURATION = 60;
+    constructor(
+        address payable _VendingMachineAddress,
+        uint _voteTime,
+        string[] memory proposalNames
+    ) {
 
-    constructor(TANToken _token) {
-        token = _token;
+        VendingMachineAddress = _VendingMachineAddress;
+        chairperson = msg.sender;
+        
+        voteEndTime = block.timestamp + _voteTime;
+        voters[chairperson].weight = 1;
+
+        for (uint i = 0; i < proposalNames.length; i++) {
+
+            proposals.push(Proposal({
+                name: proposalNames[i],
+                voteCount: 0
+            }));
+        }
     }
 
-    function propose(
-        address _to,
-        uint _value,
-        string calldata _func,
-        bytes calldata _data,
-        string calldata _description
-    ) external returns(bytes32) {
-        require(token.balanceOf(msg.sender) > 1, "not enough token");
+    function DepositEth() public payable {
+        DAObalance = address(this).balance;
+        
+        if (block.timestamp > voteEndTime) {
+            revert voteAlreadyEnded();
+        }
+        require(DAObalance <= 1 ether, "1 Ether balance has been reached");
+        
+        balances[msg.sender]+=msg.value;
+    }
 
-        bytes32 proposalId = generateProposalId(
-            _to, _value, _func, _data, keccak256(bytes(_description))
+    function giveRightToVote(address voter) public {
+        require(
+            msg.sender == chairperson,
+            "Only chairperson can give right to vote."
         );
-
-        require(proposals[proposalId].votingStarts == 0, "proposal already exists");
-
-        proposals[proposalId] = Proposal({
-            votingStarts: block.timestamp + VOTING_DELAY,
-            votingEnds: block.timestamp + VOTING_DELAY + VOTING_DURATION,
-            executed: false
-        });
-
-        return proposalId;
-    }
-
-    function execute(
-        address _to,
-        uint _value,
-        string calldata _func,
-        bytes calldata _data,
-        bytes32 _descriptionHash
-    ) external returns(bytes memory) {
-        bytes32 proposalId = generateProposalId(
-            _to, _value, _func, _data, _descriptionHash
+        require(
+            !voters[voter].voted,
+            "The voter already voted."
         );
-
-        require(state(proposalId) == ProposalState.Succeeded, "invalid state");
-
-        Proposal storage proposal = proposals[proposalId];
-
-        proposal.executed = true;
-
-        bytes memory data;
-        if (bytes(_func).length > 0) {
-            data = abi.encodePacked(
-                bytes4(keccak256(bytes(_func))), _data
-            );
-        } else {
-            data = _data;
-        }
-
-        (bool success, bytes memory resp) = _to.call{value: _value}(data);
-        require(success, "tx failed");
-
-        return resp;
+        require(voters[voter].weight == 0);
+        voters[voter].weight = 1;
     }
 
-    function vote(bytes32 proposalId, uint8 voteType) external {
-        require(state(proposalId) == ProposalState.Active, "invalid state");
-
-        uint votingPower = token.balanceOf(msg.sender);
-
-        require(votingPower > 0, "not enough tokens");
-
-        ProposalVote storage proposalVote = proposalVotes[proposalId];
-
-        require(!proposalVote.hasVoted[msg.sender], "already voted");
-
-        if(voteType == 0) {
-            proposalVote.againstVotes += votingPower;
-        } else if(voteType == 1) {
-            proposalVote.forVotes += votingPower;
-        } else {
-            proposalVote.abstainVotes += votingPower;
-        }
-
-        proposalVote.hasVoted[msg.sender] = true;
+    function vote(uint proposal) public {
+        Voter storage sender = voters[msg.sender];
+        require(sender.weight != 0, "Has no right to vote");
+        require(!sender.voted, "Already voted.");
+        sender.voted = true;
+        sender.vote = proposal;
+        proposals[proposal].voteCount += sender.weight;
     }
 
-    function state(bytes32 proposalId) public view returns (ProposalState) {
-        Proposal storage proposal = proposals[proposalId];
-        ProposalVote storage proposalVote = proposalVotes[proposalId];
+    function countVote() public returns (uint winningProposal_) {
+        require(block.timestamp > voteEndTime, "Vote not yet ended.");
+        
+        uint winningVoteCount = 0;
 
-        require(proposal.votingStarts > 0, "proposal doesnt exist");
-
-        if (proposal.executed) {
-            return ProposalState.Executed;
-        }
-
-        if (block.timestamp < proposal.votingStarts) {
-            return ProposalState.Pending;
-        }
-
-        if(block.timestamp >= proposal.votingStarts &&
-            proposal.votingEnds > block.timestamp) {
-            return ProposalState.Active;
-        }
-
-        if(proposalVote.forVotes > proposalVote.againstVotes) {
-            return ProposalState.Succeeded;
-        } else {
-            return ProposalState.Defeated;
+        for (uint p = 0; p < proposals.length; p++) {
+            if (proposals[p].voteCount > winningVoteCount) {
+                winningVoteCount = proposals[p].voteCount;
+                winningProposal_ = p;
+                
+                decision = winningProposal_;
+                ended = true;
+            }
         }
     }
 
-    function generateProposalId(
-        address _to,
-        uint _value,
-        string calldata _func,
-        bytes calldata _data,
-        bytes32 _descriptionHash
-    ) internal pure returns(bytes32) {
-        return keccak256(abi.encode(_to, _value, _func, _data, _descriptionHash
-        ));
+    function withdraw(uint amount) public {
+        require(balances[msg.sender] >= amount, "amount > balance");
+
+        balances[msg.sender]-= amount;
+        payable(msg.sender).transfer(amount);
+
+        DAObalance = address(this).balance;
+        
     }
 
-    receive() external payable {}
+    function EndVote() public {
+        require(
+            block.timestamp > voteEndTime,
+            "Vote not yet ended.");
+          
+        require(
+            ended == true,
+            "Must count vote first");  
+            
+        require(
+            DAObalance >= 1 ether,
+            "Not enough balance in DAO required to buy cupcake. Members may withdraw deposited ether.");
+            
+        require(
+            decision == 0,
+            "DAO decided to not buy cupcakes. Members may withdraw deposited ether."); 
+            
+        if (DAObalance  < 1 ether) revert();
+            (bool success, ) = address(VendingMachineAddress).call{value: 1 ether}(abi.encodeWithSignature("purchase(uint256)", 1));
+            require(success);
+            
+        DAObalance = address(this).balance;
+  
+    }
+
+    function checkCupCakeBalance() public view returns (uint) {
+        VendingMachine vendingMachine = VendingMachine(VendingMachineAddress);
+        return vendingMachine.cupcakeBalances(address(this));
+    }
 }
