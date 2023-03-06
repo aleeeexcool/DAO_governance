@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import "./DigitalVendingMachine.sol";
 import "./ERC20.sol";
 
-contract DAO is ERC20, TANToken {
+contract DAO is TANToken {
     address payable public VendingMachineAddress;
     
     uint public voteEndTime;
