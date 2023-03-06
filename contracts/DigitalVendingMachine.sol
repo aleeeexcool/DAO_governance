@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-contract VendingMachine {
+contract DigitalVendingMachine {
 
     address public owner;
     mapping (address => uint) public cupcakeBalances;

@@ -94,7 +94,7 @@ contract ERC20 is IERC20 {
 }
 
 contract TANToken is ERC20 {
-    constructor(address shop) ERC20("TANToken", "TAN", 1000000, shop) {}
+    constructor(address shop) ERC20("TANToken", "TAN", 10000000000, shop) {}
 }
 
 contract TANShop {
