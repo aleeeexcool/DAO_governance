@@ -35,8 +35,8 @@ describe("DAO", function () {
             const { account1, dao } = await loadFixture(deploy);
             let amountPayable = {value: ethers.utils.parseEther("0.5")};
 
-            
-            
+            await dao.connect(account1).Deposit(amountPayable);
+            // expect(dao.DAObalance).to.equal(amountPayable);
         });
 
         it("Should revert on double vote", async function(){

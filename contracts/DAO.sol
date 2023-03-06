@@ -62,7 +62,7 @@ contract DAO {
         if (block.timestamp > voteEndTime) {
             revert voteAlreadyEnded();
         }
-        require(DAObalance <= 0.1 ether, "1 Ether balance has been reached"); //Here need to change ETH on TAN token, but how??
+        require(DAObalance <= 1 ether, "1 Ether balance has been reached"); //Here need to change ETH on TAN token, but how??
         
         balances[msg.sender] += msg.value;
     }
