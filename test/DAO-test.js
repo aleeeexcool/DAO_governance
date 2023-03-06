@@ -6,13 +6,13 @@ describe("DAO", function () {
     async function deploy() {
         const [deployer, account1, account2, account3] = await ethers.getSigners();
     
-        const DigitalVendingMachine = await ethers.getContractFactory("DigitalVendingMachine");
-        const machine = await DigitalVendingMachine.deploy();
+        const VendingMachine = await ethers.getContractFactory("VendingMachine");
+        const machine = await VendingMachine.deploy();
     
-        const proposals = ['buy_cupcake', 'no_cupcakes']
+        const proposals = ['buy_cookie', 'no_cookie']
     
-        const SimpleDAO = await ethers.getContractFactory("simpleDAO");
-        const dao = await SimpleDAO.deploy(machine.address, 86400, proposals);
+        const DAO = await ethers.getContractFactory("DAO");
+        const dao = await DAO.deploy(machine.address, 86400, proposals);
     
         for (let i = 1; i<4; i++) {
             let voters = await ethers.getSigners();
@@ -20,5 +20,32 @@ describe("DAO", function () {
         }
     
         return { dao, machine, deployer, account1, account2, account3 };
-      }
-})
+    }
+
+    describe("Deployment", function() {
+        it("Shoud be have a deployer and machine address", async function() {
+            const { machine, dao } = await loadFixture(deploy);
+
+            let machineAddr = await dao.VendingMachineAddress();
+
+            expect(machineAddr).to.equal(machine.address);
+        });
+
+        it("Account1 can make a deposit", async function() {
+            const { account1, dao } = await loadFixture(deploy);
+            let amountPayable = {value: ethers.utils.parseEther("0.5")};
+
+            
+            
+        });
+
+        it("Should revert on double vote", async function(){
+            const { dao, account1, account2, account3 } = await loadFixture(deploy);
+
+            const yes = 0;
+
+            await dao.connect(account1).vote(yes);
+            await expect(dao.connect(account1).vote(yes)).to.be.reverted;
+        });
+    });
+});

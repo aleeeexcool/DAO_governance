@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import "./DigitalVendingMachine.sol";
-import "./ERC20.sol";
 
-contract DAO is TANToken {
+contract DAO {
+    address public chairperson;
     address payable public VendingMachineAddress;
-    
     uint public voteEndTime;
-    
     uint public DAObalance;
-    
     mapping(address => uint) balances;
-    
     uint public decision;
-
     bool public ended;
     
     struct Voter {
@@ -29,9 +24,7 @@ contract DAO is TANToken {
         uint voteCount;
     }
 
-    address public chairperson;
-
-    mapping(address => Voter) public voters;
+    mapping(address => Voter) voters;
     Proposal[] public proposals;
 
     error voteAlreadyEnded();
@@ -58,15 +51,20 @@ contract DAO is TANToken {
         }
     }
 
-    function DepositEth() public payable {
+    // modifier tokenHoldersOnly() {
+    //     require(token.balanceOf(msg.sender) >= 10**token.decimals());
+    //     _;
+    // }
+
+    function Deposit() public payable {
         DAObalance = address(this).balance;
         
         if (block.timestamp > voteEndTime) {
             revert voteAlreadyEnded();
         }
-        require(DAObalance <= 1 ether, "1 Ether balance has been reached");
+        require(DAObalance <= 0.1 ether, "1 Ether balance has been reached"); //Here need to change ETH on TAN token, but how??
         
-        _[msg.sender]+=msg.value;
+        balances[msg.sender] += msg.value;
     }
 
     function giveRightToVote(address voter) public {
@@ -108,9 +106,9 @@ contract DAO is TANToken {
     }
 
     function withdraw(uint amount) public {
-        require(_[msg.sender] >= amount, "amount > balance");
+        require(balances[msg.sender] >= amount, "amount > balance");
 
-        _[msg.sender]-= amount;
+        balances[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
 
         DAObalance = address(this).balance;
@@ -128,22 +126,22 @@ contract DAO is TANToken {
             
         require(
             DAObalance >= 1 ether,
-            "Not enough balance in DAO required to buy cupcake. Members may withdraw deposited ether.");
+            "Not enough balance in DAO required to buy cookie. Members may withdraw deposited ether.");
             
         require(
             decision == 0,
-            "DAO decided to not buy cupcakes. Members may withdraw deposited ether."); 
+            "DAO decided to not buy cookies. Members may withdraw deposited ether."); 
             
         if (DAObalance  < 1 ether) revert();
-            (bool success, ) = address(VendingMachineAddress).call{value: 1 ether}(abi.encodeWithSignature("purchase(uint256)", 1));
+            (bool success, ) = address(VendingMachineAddress).call{value: 1 ether}(abi.encodeWithSignature("purchase(uint)", 1));
             require(success);
             
         DAObalance = address(this).balance;
   
     }
 
-    function checkCupCakeBalance() public view returns (uint) {
+    function checkCookieBalance() public view returns (uint) {
         VendingMachine vendingMachine = VendingMachine(VendingMachineAddress);
-        return vendingMachine.cupcake_(address(this));
+        return vendingMachine.cookieBalances(address(this));
     }
 }

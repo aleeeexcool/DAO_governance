@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
-contract DigitalVendingMachine {
+contract VendingMachine {
 
     address public owner;
     mapping (address => uint) public cookieBalances;
