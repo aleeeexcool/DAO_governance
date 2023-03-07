@@ -132,9 +132,11 @@ contract DAO {
             decision == 0,
             "DAO decided to not buy cookies. Members may withdraw deposited ether."); 
             
-        if (DAObalance  < 1 ether) revert();
+        if (DAObalance < 1 ether) revert();
             (bool success, ) = address(VendingMachineAddress).call{value: 1 ether}(abi.encodeWithSignature("purchase(uint)", 1));
-            require(success);
+            require(success, "Failed to purchase cookie from vending machine.");
+
+            //Need to understand how to check that VendingMachine hands us 1 cookie
             
         DAObalance = address(this).balance;
   
