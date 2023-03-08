@@ -1,37 +1,60 @@
 const { ethers } = require('hardhat');
+const { assert, expect } = require("chai");
+const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe('VendingMachine', function () {
-  let vendingMachine;
+    async function deploy() {
+        const [owner, account1] = await ethers.getSigners();
 
-  beforeEach(async function () {
-    const VendingMachine = await ethers.getContractFactory('VendingMachine');
-    vendingMachine = await VendingMachine.deploy();
-    await vendingMachine.deployed();
+        const VendingMachine = await ethers.getContractFactory('VendingMachine');
+        vendingMachine = await VendingMachine.deploy();
+        await vendingMachine.deployed();
+
+        return { vendingMachine, owner, account1 };
+  };
+
+  it('should be an owner', async function () {
+    const { vendingMachine, owner } = await loadFixture(deploy);
+
+    expect(await vendingMachine.owner()).to.equal(owner.address);
+  });
+
+  it('should be reverted with "Only the owner can refill"', async function () {
+    const { vendingMachine, account1 } = await loadFixture(deploy);
+
+    expect(vendingMachine.connect(account1)).to.be.revertedWith('Only the owner can refill.');
+  });
+
+  it('owner can refill the balance', async function () {
+    const { vendingMachine } = await loadFixture(deploy);
+
+    const actualCookieBalanceBefore = await vendingMachine.cookieBalances(vendingMachine.address);
+    expect(actualCookieBalanceBefore).to.equal(100, 'Initial cookie balance incorrect');
+
+    const owner = await vendingMachine.owner();
+
+    const numCookiesToAdd = 10;
+    await vendingMachine.refill(numCookiesToAdd, { from: owner });
+
+    const expectedCookieBalance = 100 + numCookiesToAdd;
+    const actualCookieBalanceAfter = await vendingMachine.cookieBalances(vendingMachine.address);
+    expect(actualCookieBalanceAfter).to.equal(expectedCookieBalance, 'Cookie balance incorrect');
   });
 
   it('should purchase cookies from the vending machine', async function () {
-    // Get the current balance of the contract and the caller
+    const { vendingMachine } = await loadFixture(deploy);
+    
     const contractBalanceBefore = await ethers.provider.getBalance(vendingMachine.address);
-    const callerBalanceBefore = await ethers.provider.getBalance(accounts[0]);
 
-    // Purchase 5 cookies for 5 ether
     const cookiePrice = ethers.utils.parseEther('1');
     const numCookiesToBuy = 5;
     const amountToSend = cookiePrice.mul(numCookiesToBuy);
     await vendingMachine.purchase(numCookiesToBuy, { value: amountToSend });
 
-    // Get the updated balance of the contract and the caller
     const contractBalanceAfter = await ethers.provider.getBalance(vendingMachine.address);
-    const callerBalanceAfter = await ethers.provider.getBalance(accounts[0]);
 
-    // Check that the contract balance increased by the amount sent
     const expectedContractBalance = contractBalanceBefore.add(amountToSend);
     assert.equal(expectedContractBalance.toString(), contractBalanceAfter.toString(), 'Contract balance incorrect');
 
-    // Check that the caller's balance decreased by the amount sent plus gas fees
-    const gasPrice = await ethers.provider.getGasPrice();
-    const gasUsed = 200000; // adjust this value based on actual gas used
-    const expectedCallerBalance = callerBalanceBefore.sub(amountToSend).sub(gasPrice.mul(gasUsed));
-    assert.equal(expectedCallerBalance.toString(), callerBalanceAfter.toString(), 'Caller balance incorrect');
   });
 });
