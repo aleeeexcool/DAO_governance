@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./DigitalVendingMachine.sol";
+import "./VendingMachine.sol";
 
 contract DAO {
     address public chairperson;
@@ -135,8 +135,6 @@ contract DAO {
         if (DAObalance < 1 ether) revert();
             (bool success, ) = address(VendingMachineAddress).call{value: 1 ether}(abi.encodeWithSignature("purchase(uint)", 1));
             require(success, "Failed to purchase cookie from vending machine.");
-
-            //Need to understand how to check that VendingMachine hands us 1 cookie
             
         DAObalance = address(this).balance;
   
