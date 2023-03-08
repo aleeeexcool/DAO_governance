@@ -73,7 +73,7 @@ describe("DAO", function () {
             await expect(dao.connect(account1).vote(yes)).to.be.reverted;
         });
 
-        it("Should vote", async function () {
+        it("Should vote and return cookieBalance", async function () {
             const { dao, account1, account2, account3 } = await loadFixture(deploy);
     
             const yes = 0;
@@ -97,12 +97,17 @@ describe("DAO", function () {
             expect(decision).to.equal(0);
     
             await dao.EndVote();
-    
+
             let cookieBalance = await dao.checkCookieBalance();
-    
+            await dao.connect(account1).checkCookieBalance();
+
             expect(cookieBalance).to.equal(1);
     
-            console.log("cookie balance: ", cookieBalance);
+            // let cookieBalance = await dao.checkCookieBalance();
+    
+            // expect(cookieBalance).to.equal(1);
+    
+            // console.log("cookie balance: ", cookieBalance);
         });
     });
 });
