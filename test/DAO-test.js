@@ -47,13 +47,10 @@ describe("DAO", function () {
             expect(newBalance.sub(initialBalance)).to.equal(depositAmount);
         });
 
-        // it('Should revert if the vote has already ended', async () => {
-
-        //     await new Promise(resolve => setTimeout(resolve, (voteEndTime - Math.floor(Date.now() / 1000) + 1) * 1000));
-
-        //     const depositAmount = ethers.utils.parseEther("0.5");
-        //     await expect(dao.Deposit({ value: depositAmount })).to.be.reverted;
-        // });
+        it("should revert if called before the end of voting period", async function () {
+            const { dao } = await loadFixture(deploy);
+            await expect(dao.countVote()).to.be.revertedWith("Vote not yet ended.");
+        });
 
         it('Should revert if the ETH balance limit has been reached', async () => {
             const { dao, account1 } = await loadFixture(deploy);
