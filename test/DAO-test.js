@@ -70,41 +70,45 @@ describe("DAO", function () {
             await expect(dao.connect(account1).vote(yes)).to.be.reverted;
         });
 
-        // it("Should vote and return cookieBalance", async function () {
-        //     const { dao, account1, account2, account3 } = await loadFixture(deploy);
-    
-        //     const yes = 0;
-        //     const no = 1;
-    
-        //     let amountPayable = {value: ethers.utils.parseEther("0.5")};
-    
-        //     await dao.connect(account1).Deposit(amountPayable);
-        //     await dao.connect(account2).Deposit(amountPayable);
-    
-        //     await dao.connect(account1).vote(yes);
-        //     await dao.connect(account2).vote(yes);
-        //     await dao.connect(account3).vote(no);
-    
-        //     await ethers.provider.send("evm_increaseTime", [(24 * 60 * 60) + 60]);
-        //     await network.provider.send("evm_mine");
-    
-        //     await dao.countVote();
-        //     let decision = await dao.decision();
-    
-        //     expect(decision).to.equal(0);
-    
-        //     await dao.EndVote();
+        //need to add test withdraw()
+        
+        //need to add test giveRightToVote()
 
-        //     // let cookieBalance = await dao.checkCookieBalance();
-        //     // await dao.connect(account1).checkCookieBalance();
+        it("Should vote and return cookieBalance", async function () {
+            const { dao, account1, account2, account3 } = await loadFixture(deploy);
+    
+            const yes = 0;
+            const no = 1;
+    
+            let amountPayable = {value: ethers.utils.parseEther("0.5")};
+    
+            await dao.connect(account1).Deposit(amountPayable);
+            await dao.connect(account2).Deposit(amountPayable);
+    
+            await dao.connect(account1).vote(yes);
+            await dao.connect(account2).vote(yes);
+            await dao.connect(account3).vote(no);
+    
+            await ethers.provider.send("evm_increaseTime", [(24 * 60 * 60) + 60]);
+            await network.provider.send("evm_mine");
+    
+            await dao.countVote();
+            let decision = await dao.decision();
+    
+            expect(decision).to.equal(0);
+    
+            await dao.EndVote();
 
-        //     // expect(cookieBalance).to.equal(1);
+            // let cookieBalance = await dao.checkCookieBalance();
+            // await dao.connect(account1).checkCookieBalance();
+
+            // expect(cookieBalance).to.equal(1);
     
-        //     // let cookieBalance = await dao.checkCookieBalance();
+            // let cookieBalance = await dao.checkCookieBalance();
     
-        //     // expect(cookieBalance).to.equal(1);
+            // expect(cookieBalance).to.equal(1);
     
-        //     // console.log("cookie balance: ", cookieBalance);
-        // });
+            // console.log("cookie balance: ", cookieBalance);
+        });
     });
 });
