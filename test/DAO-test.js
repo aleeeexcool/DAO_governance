@@ -70,7 +70,14 @@ describe("DAO", function () {
             await expect(dao.connect(account1).vote(yes)).to.be.reverted;
         });
 
-        //need to add test withdraw()
+        it("Should revert on double vote", async function () {
+            const { dao, account1 } = await loadFixture(deploy);
+
+            const yes = 0;
+
+            await dao.connect(account1).vote(yes);
+            await expect(dao.connect(account1).vote(yes)).to.be.reverted;
+        });
         
         //need to add test giveRightToVote()
 

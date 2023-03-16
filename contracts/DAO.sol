@@ -112,7 +112,6 @@ contract DAO {
         payable(msg.sender).transfer(amount);
 
         DAObalance = address(this).balance;
-        
     }
 
     function EndVote() public {
