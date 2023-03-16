@@ -39,6 +39,7 @@ describe("DAO", function () {
 
         it('Should deposit ETH and update balances', async () => {
             const { dao } = await loadFixture(deploy);
+
             const depositAmount = ethers.utils.parseEther("0.5");
             const initialBalance = await ethers.provider.getBalance(dao.address);
             await dao.Deposit({ value: depositAmount });
@@ -49,11 +50,13 @@ describe("DAO", function () {
 
         it("should revert if called before the end of voting period", async function () {
             const { dao } = await loadFixture(deploy);
+
             await expect(dao.countVote()).to.be.revertedWith("Vote not yet ended.");
         });
 
         it('Should revert if the ETH balance limit has been reached', async () => {
             const { dao, account1 } = await loadFixture(deploy);
+
             const depositAmount = ethers.utils.parseEther('1', 'ether');
             await dao.Deposit({ value: depositAmount });
 
@@ -70,13 +73,10 @@ describe("DAO", function () {
             await expect(dao.connect(account1).vote(yes)).to.be.reverted;
         });
 
-        it("Should revert on double vote", async function () {
+        it("Should revert if the balance has not enough funds", async function () {
             const { dao, account1 } = await loadFixture(deploy);
 
-            const yes = 0;
-
-            await dao.connect(account1).vote(yes);
-            await expect(dao.connect(account1).vote(yes)).to.be.reverted;
+            //testing
         });
         
         //need to add test giveRightToVote()

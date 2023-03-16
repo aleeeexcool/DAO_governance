@@ -106,7 +106,7 @@ contract DAO {
     }
 
     function withdraw(uint amount) public {
-        require(balances[msg.sender] >= amount, "amount > balance");
+        require(balances[msg.sender] >= amount, "Insufficient funds on the balance!");
 
         balances[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
