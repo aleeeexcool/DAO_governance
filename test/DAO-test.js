@@ -1,10 +1,10 @@
-const { expect, assert } = require("chai")
+const { expect } = require("chai")
 const { ethers, network } = require("hardhat")
-const { time, loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
+const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("DAO", function () {
     async function deploy() {
-        const [account1, account2, account3] = await ethers.getSigners();
+        const [chairperson, account1, account2, account3] = await ethers.getSigners();
     
         const VendingMachine = await ethers.getContractFactory("VendingMachine");
         const machine = await VendingMachine.deploy();
@@ -14,12 +14,7 @@ describe("DAO", function () {
         const DAO = await ethers.getContractFactory("DAO");
         const dao = await DAO.deploy(machine.address, 86400, proposals);
     
-        for (let i = 1; i<4; i++) {
-            let voters = await ethers.getSigners();
-            await dao.giveRightToVote(voters[i].address);
-        }
-    
-        return { dao, machine, account1, account2, account3 };
+        return { dao, machine, chairperson, account1, account2, account3 };
     }
 
     describe('Deployment', function() {
@@ -67,6 +62,8 @@ describe("DAO", function () {
         it('Should revert on double vote', async function () {
             const { dao, account1 } = await loadFixture(deploy);
 
+            let voter = await dao.giveRightToVote(account1.address);
+
             const yes = 0;
 
             await dao.connect(account1).vote(yes);
@@ -101,43 +98,70 @@ describe("DAO", function () {
             expect(finalDAObalance).to.be.equal(initialDAObalance.sub(ethers.utils.parseEther('0.5')));
         });
         
+        it('should not allow a non-chairperson to give the right to vote', async function () {
+            const { dao, account3, account2 } = await loadFixture(deploy);
+            
+            await expect(dao.connect(account2).giveRightToVote(account3.address)).to.be.revertedWith('Only chairperson can give right to vote.');
+        });
+
+        it('should give the right to vote to a voter', async function () {
+            const { dao, chairperson, account3 } = await loadFixture(deploy);
+
+            await expect(await dao.connect(chairperson).giveRightToVote(account3.address));
+        });
+
+        it('should not allow a voter who has already voted to be given the right to vote', async function () {
+            const { dao, chairperson, account2 } = await loadFixture(deploy);
+
+            await dao.connect(chairperson).giveRightToVote(account2.address);
         
+            await dao.connect(account2).vote(1);
+        
+            await expect(dao.giveRightToVote(account2.address)).to.be.revertedWith('The voter already voted.');
+        });
+        
+        it('should not allow a voter who already has the right to vote to be given the right to vote again', async function () {
+            const { dao, chairperson, account2 } = await loadFixture(deploy);
 
-        // it('Should vote and return cookieBalance', async function () {
-        //     const { dao, account1, account2, account3 } = await loadFixture(deploy);
-    
-        //     const yes = 0;
-        //     const no = 1;
-    
-        //     let amountPayable = {value: ethers.utils.parseEther("0.5")};
-    
-        //     await dao.connect(account1).Deposit(amountPayable);
-        //     await dao.connect(account2).Deposit(amountPayable);
-    
-        //     await dao.connect(account1).vote(yes);
-        //     await dao.connect(account2).vote(yes);
-        //     await dao.connect(account3).vote(no);
-    
-        //     await ethers.provider.send("evm_increaseTime", [(24 * 60 * 60) + 60]);
-        //     await network.provider.send("evm_mine");
-    
-        //     await dao.countVote();
-        //     let decision = await dao.decision();
-    
-        //     expect(decision).to.equal(0);
-    
-        //     await dao.EndVote();
+            await dao.connect(chairperson).giveRightToVote(account2.address);
+        
+            await expect(dao.giveRightToVote(account2.address)).to.be.revertedWith('You already have a right to vote.');
+        });
 
-        //     let cookieBalance = await dao.checkCookieBalance();
-        //     await dao.connect(account1).checkCookieBalance();
+        it('Should vote and return cookieBalance', async function () {
+            const { dao, chairperson, account1, account2, account3 } = await loadFixture(deploy);
+    
+            const yes = 0;
+            const no = 1;
+    
+            let amountPayable = {value: ethers.utils.parseEther("0.5")};
+    
+            await dao.connect(account1).Deposit(amountPayable);
+            await dao.connect(account2).Deposit(amountPayable);
 
-        //     expect(cookieBalance).to.equal(1);
+            await dao.connect(chairperson).giveRightToVote(account1.address);
+            await dao.connect(chairperson).giveRightToVote(account2.address);
+            await dao.connect(chairperson).giveRightToVote(account3.address);
     
-        //     let cookieBalance = await dao.checkCookieBalance();
+            await dao.connect(account1).vote(yes);
+            await dao.connect(account2).vote(yes);
+            await dao.connect(account3).vote(no);
     
-        //     expect(cookieBalance).to.equal(1);
+            await ethers.provider.send("evm_increaseTime", [(24 * 60 * 60) + 60]);
+            await network.provider.send("evm_mine");
     
-        //     console.log("cookie balance: ", cookieBalance);
-        // });
+            await dao.countVote();
+            let decision = await dao.decision();
+    
+            expect(decision).to.equal(0);
+    
+            await dao.EndVote();
+    
+            let cookieBalance = await dao.checkCookieBalance();
+    
+            expect(cookieBalance).to.equal(1);
+    
+            console.log("cookie balance: ", cookieBalance);
+        });
     });
 });
