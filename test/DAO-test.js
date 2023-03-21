@@ -101,7 +101,7 @@ describe("DAO", function () {
             expect(finalDAObalance).to.be.equal(initialDAObalance.sub(ethers.utils.parseEther('0.5')));
         });
         
-        //need to add test giveRightToVote()
+        
 
         // it('Should vote and return cookieBalance', async function () {
         //     const { dao, account1, account2, account3 } = await loadFixture(deploy);

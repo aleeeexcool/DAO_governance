@@ -51,18 +51,13 @@ contract DAO {
         }
     }
 
-    // modifier tokenHoldersOnly() {
-    //     require(token.balanceOf(msg.sender) >= 10**token.decimals());
-    //     _;
-    // }
-
     function Deposit() public payable {
         DAObalance = address(this).balance;
         
         if (block.timestamp > voteEndTime) {
             revert voteAlreadyEnded();
         }
-        require(DAObalance <= 1 ether, "1 Ether balance has been reached"); //Here need to change ETH on TAN token, but how??
+        require(DAObalance <= 1 ether, "1 Ether balance has been reached");
         
         balances[msg.sender] += msg.value;
     }
