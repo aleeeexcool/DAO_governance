@@ -1,5 +1,5 @@
-const { expect } = require("chai")
-const { ethers, network } = require("hardhat")
+const { expect } = require("chai");
+const { ethers, network } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("DAO", function () {
