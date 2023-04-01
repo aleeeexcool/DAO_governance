@@ -55,6 +55,5 @@ describe('VendingMachine', function () {
 
     const expectedContractBalance = contractBalanceBefore.add(amountToSend);
     assert.equal(expectedContractBalance.toString(), contractBalanceAfter.toString(), 'Contract balance incorrect');
-
   });
 });
