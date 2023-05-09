@@ -11,6 +11,7 @@ contract DAO {
     uint public decision;
     bool public ended;
     mapping(address => uint) balances;
+    mapping(address => Voter) voters;
     
     struct Voter {
         uint weight;
@@ -24,7 +25,6 @@ contract DAO {
         uint voteCount;
     }
 
-    mapping(address => Voter) voters;
     Proposal[] public proposals;
 
     error voteAlreadyEnded();
