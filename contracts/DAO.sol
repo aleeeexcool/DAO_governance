@@ -8,9 +8,9 @@ contract DAO {
     address payable public VendingMachineAddress;
     uint public voteEndTime;
     uint public DAObalance;
-    mapping(address => uint) balances;
     uint public decision;
     bool public ended;
+    mapping(address => uint) balances;
     
     struct Voter {
         uint weight;
